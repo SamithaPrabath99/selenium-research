@@ -6,15 +6,24 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 YOUTUBE = 'https://www.youtube.com/'
-def get_trending_videos(url: str):
+
+
+def setup_browser():
     os.environ['PATH'] += os.environ['CHROME_PATH']
     options = webdriver.ChromeOptions()
     options.add_experimental_option("detach", True)
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
     driver.implicitly_wait(60)
+    return driver
+
+
+def get_trending_videos(url: str):
+    driver = setup_browser()
     driver.get(url)
 
     trending = driver.find_element(By.XPATH, '//a[@title="Trending"]')
@@ -46,24 +55,53 @@ def get_trending_videos(url: str):
     driver.quit()
 
 
-def get_search_result(url,keywords):
-    pass
+def get_search_result(url, keywords):
+    driver = setup_browser()
+    driver.get(url+f'results?search_query={keywords}')
+
+    video_list = driver.find_elements(By.XPATH, '//*[@id="contents"]/ytd-video-renderer')
+    print(video_list)
+    print('Thumbnail Link | Title | Channel Name | Views | Days | Video Link')
+    for video in video_list:
+        driver.execute_script("arguments[0].scrollIntoView();", video)
+        image = video.find_element(By.TAG_NAME, 'img')
+        print(image.get_attribute('src'), end=' | ')
+
+        title = video.find_element(By.TAG_NAME, 'yt-formatted-string')
+        print(title.text, end=' | ')
+
+        channel_name = video.find_element(By.XPATH, 'div[1]/div/div[2]/ytd-channel-name/div/div/yt-formatted-string/a')
+        print(channel_name.text, end=' | ')
+
+        views = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[1]')
+        print(views.text, end=' | ')
+
+        days = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[1]')
+        print(days.text, end=' | ')
+
+        video_url = video.find_element(By.XPATH, 'div[1]/ytd-thumbnail/a')
+        print(video_url.get_attribute('href'))
+
+    driver.quit()
 
 
 def get_user_choice():
     print('Hi There, This is simple youtube scraping testing project \n\n'
           'This project help you to get some information \n\n'
-          'First You need to select choice \n'
+          'First You need to select choice \n\n'
           'G-give the keyword to search\n'
-          'O-automation and give me trending video details\n\n'
-          'enter for exit')
+          'O-automation and give me trending video details\n'
+          'enter for exit\n\n')
     while True:
-        choice = input('Please Enter your choice').upper()
+        choice = input('Please Enter your choice : ').upper()
 
         if choice == 'G':
-            keywords = input('what do you want to search ? ')
-            get_search_result(YOUTUBE,keywords=keywords)
+            keywords = input('what do you want to search ?   ')
+            get_search_result(YOUTUBE, keywords=keywords)
         elif choice == 'O':
             get_trending_videos(YOUTUBE)
         else:
             break
+
+
+get_user_choice()
