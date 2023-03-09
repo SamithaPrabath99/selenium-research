@@ -7,8 +7,8 @@ from selenium.common import NoSuchElementException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-
-def serf_web(url: str):
+YOUTUBE = 'https://www.youtube.com/'
+def get_trending_videos(url: str):
     os.environ['PATH'] += os.environ['CHROME_PATH']
     options = webdriver.ChromeOptions()
     options.add_experimental_option("detach", True)
@@ -46,5 +46,24 @@ def serf_web(url: str):
     driver.quit()
 
 
-youtube_url = 'https://www.youtube.com/'
-serf_web(url=youtube_url)
+def get_search_result(url,keywords):
+    pass
+
+
+def get_user_choice():
+    print('Hi There, This is simple youtube scraping testing project \n\n'
+          'This project help you to get some information \n\n'
+          'First You need to select choice \n'
+          'G-give the keyword to search\n'
+          'O-automation and give me trending video details\n\n'
+          'enter for exit')
+    while True:
+        choice = input('Please Enter your choice').upper()
+
+        if choice == 'G':
+            keywords = input('what do you want to search ? ')
+            get_search_result(YOUTUBE,keywords=keywords)
+        elif choice == 'O':
+            get_trending_videos(YOUTUBE)
+        else:
+            break
