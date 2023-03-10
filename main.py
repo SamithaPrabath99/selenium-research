@@ -3,11 +3,8 @@
 """
 import os
 from selenium import webdriver
-from selenium.common import NoSuchElementException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
 
 YOUTUBE = 'https://www.youtube.com/'
 
@@ -16,13 +13,15 @@ def setup_browser():
     os.environ['PATH'] += os.environ['CHROME_PATH']
     options = webdriver.ChromeOptions()
     options.add_experimental_option("detach", True)
+    # options.headless = True
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
     driver.implicitly_wait(60)
     return driver
 
 
-def get_trending_videos(url: str):
+def get_trending_videos(url=YOUTUBE):
+    details = list()
     driver = setup_browser()
     driver.get(url)
 
@@ -31,58 +30,80 @@ def get_trending_videos(url: str):
 
     video_list = driver.find_elements(By.XPATH, '//*[@id="grid-container"]/ytd-video-renderer')
     print('Thumbnail Link | Title | Channel Name | Views | Days | Video Link')
+    data = {}
     for video in video_list:
         driver.execute_script("arguments[0].scrollIntoView();", video)
         image = video.find_element(By.TAG_NAME, 'img')
         print(image.get_attribute('src'), end=' | ')
+        data['thumbnail-url'] = image.get_attribute('src')
 
         title = video.find_element(By.TAG_NAME, 'yt-formatted-string')
         print(title.text, end=' | ')
+        data['title'] = title.text
 
         channel_name = video.find_element(By.XPATH, r'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div['
                                                     r'1]/ytd-channel-name/div/div/yt-formatted-string/a')
         print(channel_name.text, end=' | ')
+        data['channel_name'] = channel_name.text
 
         views = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[1]')
         print(views.text, end=' | ')
+        data['views'] = views.text
 
         days = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[2]')
         print(days.text, end=' | ')
+        data['days'] = days.text
 
         video_url = video.find_element(By.XPATH, 'div[1]/ytd-thumbnail/a')
         print(video_url.get_attribute('href'))
-
+        data['video-url'] = video_url.get_attribute('href')
+        details.append(data)
+        data = {}
     driver.quit()
+    return details
 
 
-def get_search_result(url, keywords):
+def get_search_result(url=YOUTUBE, keywords='test'):
+    details = list()
+    if keywords == '':
+        keywords = 'test'
     driver = setup_browser()
     driver.get(url+f'results?search_query={keywords}')
 
     video_list = driver.find_elements(By.XPATH, '//*[@id="contents"]/ytd-video-renderer')
     print(video_list)
     print('Thumbnail Link | Title | Channel Name | Views | Days | Video Link')
+    data = {}
     for video in video_list:
         driver.execute_script("arguments[0].scrollIntoView();", video)
         image = video.find_element(By.TAG_NAME, 'img')
         print(image.get_attribute('src'), end=' | ')
+        data['thumbnail-url'] = image.get_attribute('src')
 
         title = video.find_element(By.TAG_NAME, 'yt-formatted-string')
         print(title.text, end=' | ')
+        data['title'] = title.text
 
         channel_name = video.find_element(By.XPATH, 'div[1]/div/div[2]/ytd-channel-name/div/div/yt-formatted-string/a')
         print(channel_name.text, end=' | ')
+        data['channel_name'] = channel_name.text
 
         views = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[1]')
         print(views.text, end=' | ')
+        data['views'] = views.text
 
         days = video.find_element(By.XPATH, 'div[1]/div/div[1]/ytd-video-meta-block/div[1]/div[2]/span[1]')
         print(days.text, end=' | ')
+        data['days'] = days.text
 
         video_url = video.find_element(By.XPATH, 'div[1]/ytd-thumbnail/a')
         print(video_url.get_attribute('href'))
+        data['video-url'] = video_url.get_attribute('href')
+        details.append(data)
+        data = {}
 
     driver.quit()
+    return details
 
 
 def get_user_choice():
@@ -102,6 +123,3 @@ def get_user_choice():
             get_trending_videos(YOUTUBE)
         else:
             break
-
-
-get_user_choice()
